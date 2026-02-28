@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Astro Comp Analyzer V3",
+  "version": "1.0",
+  "action": {
+    "default_title": "Open Analyzer"
+  },
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "sidepanel/index.html"
+  },
+  "permissions": [
+    "sidePanel",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://*.zillow.com/*",
+    "https://*.realtor.com/*",
+    "https://*.homes.com/*"
+  ]
+}
