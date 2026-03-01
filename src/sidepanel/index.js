@@ -1,91 +1,106 @@
-// Allowed domains for the analyzer
+// index.js - Sidebar Entry Point
 const ALLOWED_DOMAINS = ['zillow.com', 'realtor.com', 'homes.com'];
+let masterPropertyList = []; // Holds the full list for filtering
 
-// Check if the current tab URL is on an allowed domain
-function isAllowedDomain(url) {
-    if (!url) return false;
-    try {
-        const urlObj = new URL(url);
-        return ALLOWED_DOMAINS.some(domain => urlObj.hostname.includes(domain));
-    } catch (e) {
-        return false;
-    }
-}
-
-// Update the analyze button state based on the current tab
+/**
+ * UI State Management
+ */
 async function updateAnalyzeButtonState() {
     const analyzeBtn = document.getElementById('analyzeBtn');
     const initialMessage = document.getElementById('initialMessage');
 
     try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        const isAllowed = isAllowedDomain(tab?.url);
+        const isAllowed = tab?.url && ALLOWED_DOMAINS.some(domain => new URL(tab.url).hostname.includes(domain));
 
         analyzeBtn.disabled = !isAllowed;
 
-        if (!isAllowed && initialMessage && initialMessage.style.display !== 'none') {
-            initialMessage.textContent = 'Navigate to Homes.com,Realtor.com, or Zillow to analyze listings.';
-        } else if (isAllowed && initialMessage && initialMessage.style.display !== 'none') {
-            initialMessage.textContent = 'Go to Sold or Active listings and click Analyze to Start.';
+        if (initialMessage) {
+            initialMessage.textContent = isAllowed 
+                ? 'Go to Sold or Active listings and click Analyze to Start.' 
+                : 'Navigate to Homes.com, Realtor.com, or Zillow to analyze listings.';
         }
     } catch (error) {
-        console.error('Error checking tab URL:', error);
         analyzeBtn.disabled = true;
     }
 }
 
-// Accordion functionality for collapsible steps
-document.addEventListener('DOMContentLoaded', function() {
-    const stepHeaders = document.querySelectorAll('.astro-step-header');
-    
-    stepHeaders.forEach(header => {
-        header.addEventListener('click', function() {
-            const step = this.closest('.astro-step');
-            step.classList.toggle('collapsed');
-        });
-    });
+/**
+ * The Scrape Trigger
+ */
+async function handleAnalyzeClick() {
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    analyzeBtn.textContent = 'Analyzing...';
+    analyzeBtn.disabled = true;
 
-    // Handle arrow key navigation for number inputs with two decimal places
-    const numberInputs = document.querySelectorAll('input[type="number"]');
-    
-    numberInputs.forEach(input => {
-        // Format value to two decimal places on blur
-        input.addEventListener('blur', function() {
-            if (this.value && !isNaN(this.value)) {
-                this.value = parseFloat(this.value).toFixed(2);
-            }
-        });
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-        // Handle keyboard arrow keys for increment/decrement
-        input.addEventListener('keydown', function(e) {
-            const currentValue = parseFloat(this.value) || 0;
-            const step = parseFloat(this.step) || 0.01;
+    // Send command to main.js (Content Script)
+    chrome.tabs.sendMessage(tab.id, { action: "TRIGGER_SCRAPE" }, (response) => {
+        analyzeBtn.textContent = 'Analyze';
+        analyzeBtn.disabled = false;
 
-            if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                this.value = (currentValue + step).toFixed(2);
-                this.dispatchEvent(new Event('input', { bubbles: true }));
-            } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                const newValue = Math.max(0, currentValue - step);
-                this.value = newValue.toFixed(2);
-                this.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        });
-    });
+        if (chrome.runtime.lastError) {
+            console.error("Communication Error:", chrome.runtime.lastError.message);
+            alert("Please refresh the property page and try again.");
+            return;
+        }
 
-    // Check button state on load
-    updateAnalyzeButtonState();
-
-    // Listen for tab updates to update button state dynamically
-    chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-        if (changeInfo.url || changeInfo.status === 'complete') {
-            updateAnalyzeButtonState();
+        if (response?.success) {
+            masterPropertyList = response.data;
+            renderList(masterPropertyList);
+            
+            // Hide initial message if data exists
+            const initialMessage = document.getElementById('initialMessage');
+            if (initialMessage) initialMessage.style.display = 'none';
         }
     });
+}
 
-    // Listen for tab activation (switching between tabs)
-    chrome.tabs.onActivated.addListener(() => {
-        updateAnalyzeButtonState();
+/**
+ * Rendering Logic
+ */
+function renderList(properties) {
+    const container = document.getElementById('propertyList'); // Ensure this ID exists in your HTML
+    if (!container) return;
+
+    if (properties.length === 0) {
+        container.innerHTML = '<p>No properties found on this page.</p>';
+        return;
+    }
+
+    container.innerHTML = properties.map(p => `
+        <div class="astro-property-card">
+            <div class="card-header">
+                <strong>$${p.price.toLocaleString()}</strong>
+                <span>${p.acreage.toFixed(2)} Acres</span>
+            </div>
+            <small>${p.address}</small>
+        </div>
+    `).join('');
+}
+
+/**
+ * Initialization & Listeners
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Core Actions
+    document.getElementById('analyzeBtn').addEventListener('click', handleAnalyzeClick);
+
+    // 2. Tab Listeners for State Management
+    updateAnalyzeButtonState();
+    chrome.tabs.onUpdated.addListener((id, change) => { if (change.url || change.status === 'complete') updateAnalyzeButtonState(); });
+    chrome.tabs.onActivated.addListener(updateAnalyzeButtonState);
+
+    // 3. Accordion Logic (Retained)
+    document.querySelectorAll('.astro-step-header').forEach(header => {
+        header.addEventListener('click', () => header.closest('.astro-step').classList.toggle('collapsed'));
+    });
+
+    // 4. Number Input Formatting (Retained/Cleaned)
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value && !isNaN(this.value)) this.value = parseFloat(this.value).toFixed(2);
+        });
     });
 });

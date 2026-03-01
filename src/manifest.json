@@ -20,5 +20,50 @@
     "https://*.zillow.com/*",
     "https://*.realtor.com/*",
     "https://*.homes.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [ "https://*.zillow.com/*" ],
+      "js": [ "content/scripts/main.js" ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [ "https://*.realtor.com/*" ],
+      "js": [ "content/scripts/main.js" ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [ "https://*.homes.com/*" ],
+      "js": [ "content/scripts/main.js" ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content/scrapers/BaseScraper.js",
+        "content/scrapers/ScraperFactory.js",
+        "content/scrapers/ZillowScraper.js",
+        "content/scrapers/RealtorScraper.js",
+        "content/scrapers/HomesScraper.js"
+      ],
+      "matches": [
+        "https://*.zillow.com/*",
+        "https://*.realtor.com/*",
+        "https://*.homes.com/*"
+      ]
+    },
+    {
+      "resources": [ "content/scrapers/ZillowScraper.js" ],
+      "matches": [ "https://*.zillow.com/*" ]
+    },
+    {
+      "resources": [ "content/scrapers/RealtorScraper.js" ],
+      "matches": [ "https://*.realtor.com/*" ]
+    },
+    {
+      "resources": [ "content/scrapers/HomesScraper.js" ],
+      "matches": [ "https://*.homes.com/*" ]
+    }
   ]
 }
