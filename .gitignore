@@ -137,3 +137,11 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Visual Studio / Copilot / workspace state
+*.mpack
+slnx.sqlite
+
+# Optional: if those hex directories are under .vs or a similar root
+.vs/
+
