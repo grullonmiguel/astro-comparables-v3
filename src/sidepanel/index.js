@@ -76,6 +76,7 @@ function renderList(properties) {
                 <span>${p.acreage.toFixed(2)} Acres</span>
             </div>
             <small>${p.address}</small>
+            ${p.soldDate ? `<div class="sold-tag">${p.soldDate}</div>` : ''}
         </div>
     `).join('');
 }

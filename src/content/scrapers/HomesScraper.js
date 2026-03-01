@@ -3,11 +3,12 @@ import { BaseScraper } from './BaseScraper.js';
 export class HomesScraper extends BaseScraper {
     constructor() {
         super({
-            cardSelector: 'li.property-item',
-            priceSelector: '.price-container',
-            acreageSelector: '.property-specs li:contains("Acre")', 
-            addressSelector: '.address-container',
-            linkSelector: 'a.property-card-anchor'
+            cardSelector: 'li.placard-container',
+            priceSelector: 'p.price-container',
+            addressSelector: 'address',
+            linkSelector: "a[role='link']",
+            acreageSelector: 'ul.detailed-info-container',
+            statusSelector: 'span.status-pill.tag-type-sold, span.status-pill.tag-type-pending, span.status-pill.tag-type-under-contract' // Unified name
         });
     }
 } 

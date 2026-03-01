@@ -8,7 +8,7 @@ export class BaseScraper {
      * Core scraping loop.
      * Iterates over cards and extracts data based on the config provided by the child class.
      */
-    scrape() {
+   scrape() {
         const cards = document.querySelectorAll(this.config.cardSelector);
         console.log(`[BaseScraper] Found ${cards.length} property cards.`);
 
@@ -17,12 +17,21 @@ export class BaseScraper {
             const rawAcreage = this.getElementText(card, this.config.acreageSelector);
 
             return {
-                id: crypto.randomUUID(), // Unique ID for list rendering
+                // Unique ID for this property (can be used for deduplication).
+                id: crypto.randomUUID(), 
+                // The address text.
                 address: this.getElementText(card, this.config.addressSelector),
+                // The price text.
                 price: this.parsePrice(rawPrice),
+                // The text containing lot size info.
                 acreage: this.parseAcreage(rawAcreage),
-                rawPrice: rawPrice,       // Kept for debugging
-                rawAcreage: rawAcreage,   // Kept for debugging
+                // Raw values (for debugging or display purposes).
+                rawPrice: rawPrice,
+                // The raw acreage text (e.g., "0.5 acres" or "21,780 sqft").
+                rawAcreage: rawAcreage,
+                // Any "badge" or "tag" text (Sold, Pending, Price Cut).
+                status: this.getElementText(card, this.config.statusSelector),
+                // The URL to the property details page.
                 url: this.getHref(card, this.config.linkSelector)
             };
         });

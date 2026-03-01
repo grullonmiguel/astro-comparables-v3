@@ -77,6 +77,160 @@
             flex-shrink: 0;
         }
 
+        .astro-footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #4b5563;
+        }
+
+        .astro-footer-divider {
+            width: 100%;
+            height: 1px;
+            background: #e5e7eb;
+            margin: 12px 0;
+        }
+
+        .astro-calculator {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+            .astro-calculator.visible {
+                display: flex;
+            }
+
+        .astro-calculator-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .astro-calculator-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+            flex: 1;
+        }
+
+        .astro-calculator-options {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+            .astro-calculator-options label {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                font-size: 12px;
+                color: var(--astro-text-tertiary);
+                cursor: pointer;
+            }
+
+                .astro-calculator-options label input[type="checkbox"] {
+                        cursor: pointer;
+                        width: 16px;
+                        height: 16px;
+                        accent-color: var(--astro-accent-primary);
+                        border-radius: 4px;
+                    }
+
+        .astro-calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.2fr;
+            gap: 12px;
+        }
+
+        .astro-calculator-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .astro-calculator-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--astro-text-tertiary);
+        }
+
+        .astro-calculator-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #111827;
+            background: #ffffff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+            .astro-calculator-input:focus {
+                outline: none;
+                border-color: var(--astro-accent-primary);
+                box-shadow: 0 0 0 3px rgba(137, 123, 204, 0.1);
+            }
+
+            .astro-calculator-input::placeholder {
+                color: var(--astro-text-secondary);
+            }
+
+        .astro-calculator-output {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .astro-calculator-value {
+            padding: 8px 12px;
+            background: var(--astro-accent-highlight);
+            border: 1px solid var(--astro-accent-secondary);
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--astro-accent-primary);
+            text-align: center;
+        }
+
+        .astro-footer-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+            .astro-footer-links a {
+                color: #6b7280;
+                text-decoration: none;
+                transition: color 0.2s;
+            }
+
+                .astro-footer-links a:hover {
+                    color: var(--astro-accent-primary);
+                }
+
+            .astro-footer-links .astro-step-icon {
+                width: 16px;
+                height: 16px;
+            }
+
+                .astro-footer-links .astro-step-icon svg {
+                    width: 100%;
+                    height: 100%;
+                    fill: #6b7280;
+                }
+
+            .astro-footer-links span {
+                color: #6b7280;
+                font-size: 11px;
+            }
+
         .astro-btn {
             width: 100%;
             padding: 10px 14px;
@@ -473,7 +627,77 @@
     </div>
 
     <div class="astro-footer">
-        <!-- Footer content goes here -->
+        <!-- Market Value Calculator (Initially Hidden) -->
+        <div id="marketCalculator" class="astro-calculator">
+            <div class="astro-calculator-header">
+                <div class="astro-step-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z" />
+                    </svg>
+                </div>
+                <div class="astro-calculator-title">Market Value Calculator</div>
+                <div class="astro-calculator-options">
+                    <label>
+                        <input type="checkbox" id="include-sold" checked>
+                        Sold
+                    </label>
+                    <label>
+                        <input type="checkbox" id="include-active" checked>
+                        Active
+                    </label>
+                </div>
+            </div>
+
+            <div class="astro-calculator-grid">
+                <div class="astro-calculator-field">
+                    <label class="astro-calculator-label" for="calcPPAInput">Price/Acre</label>
+                    <input id="calcPPAInput"
+                           type="number"
+                           class="astro-calculator-input"
+                           step="0.01"
+                           placeholder="$/Acre"
+                           aria-label="Price per acre" />
+                </div>
+
+                <div class="astro-calculator-field">
+                    <label class="astro-calculator-label" for="calcAcresInput">Acres</label>
+                    <input id="calcAcresInput"
+                           type="number"
+                           class="astro-calculator-input"
+                           step="0.01"
+                           placeholder="Acres"
+                           aria-label="Number of acres" />
+                </div>
+
+                <div class="astro-calculator-output">
+                    <label class="astro-calculator-label">Estimated Value</label>
+                    <div id="calcValueOutput" class="astro-calculator-value">$0.00</div>
+                </div>
+            </div>
+            <!-- Divider -->
+            <div class="astro-footer-divider"></div>
+        </div>
+
+
+        <!-- Footer Links -->
+        <div class="astro-footer-content">
+            <div class="astro-footer-links">
+                <span class="astro-step-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,6A2,2 0 0,0 10,8A2,2 0 0,0 12,10A2,2 0 0,0 14,8A2,2 0 0,0 12,6M12,13C14.67,13 20,14.33 20,17V20H4V17C4,14.33 9.33,13 12,13M12,14.9C9.03,14.9 5.9,16.36 5.9,17V18.1H18.1V17C18.1,16.36 14.97,14.9 12,14.9Z" />
+                    </svg>
+                </span>
+                <span>Made by</span>
+                <a href="https://www.linkedin.com/in/grullonmiguel/" target="_blank" rel="noopener noreferrer">Miguel</a>
+                <span>•</span>
+                <span class="astro-step-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M2,21V19H20V21H2M20,8V5H18V8H20M20,3A2,2 0 0,1 22,5V8A2,2 0 0,1 20,10H18V13A4,4 0 0,1 14,17H8A4,4 0 0,1 4,13V3H20M16,5H6V13A2,2 0 0,0 8,15H14A2,2 0 0,0 16,13V5Z" />
+                    </svg>
+                </span>
+                <a href="https://buymeacoffee.com/grullon" target="_blank" rel="noopener noreferrer">Buy Me a Coffee</a>
+            </div>
+        </div>
     </div>
 
     <script src="index.js"></script>

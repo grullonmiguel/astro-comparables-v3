@@ -145,3 +145,4 @@ slnx.sqlite
 # Optional: if those hex directories are under .vs or a similar root
 .vs/
 
+git remote add origin2 https://github.com/grullonmiguel/astro-comparables-v3.git

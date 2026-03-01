@@ -3,11 +3,12 @@ import { BaseScraper } from './BaseScraper.js';
 export class ZillowScraper extends BaseScraper {
     constructor() {
         super({
-            cardSelector: 'li[class*="ListItem"]', // Targets Zillow's dynamic list items
-            priceSelector: '[data-test="property-card-price"]',
-            acreageSelector: '[data-test="property-card-stats"] li:last-child',
-            addressSelector: '[data-test="property-card-addr"]',
-            linkSelector: 'a[data-test="property-card-link"]'
+            cardSelector: 'article.property-card', 
+            priceSelector: 'span[data-test="property-card-price"]',
+            addressSelector: 'address',
+            linkSelector: 'a[data-test="property-card-link"]',
+            acreageSelector: '[data-test="property-card-stats"] li:nth-child(3)',
+            statusSelector: "span[class*='StyledPropertyCardBadge']" // Unified name
         });
     }
 } 
