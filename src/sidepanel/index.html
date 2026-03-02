@@ -365,7 +365,6 @@
         }
 
         .astro-step-content {
-            /* Change hidden to auto to allow scrolling */
             overflow-y: auto;
             transition: opacity 0.3s ease;
             opacity: 1;
@@ -466,7 +465,8 @@
             gap: 8px;
             overflow-y: auto;
         }
-            /* Optional: Make the scrollbar look cleaner */
+            
+        /* Optional: Make the scrollbar look cleaner */
             .astro-card-container::-webkit-scrollbar {
                 width: 6px;
             }
@@ -509,28 +509,25 @@
         }
 
             .astro-address-link:hover {
-                color: #7c3aed !important;
+                color: var(--astro-accent-primary);
                 text-decoration: underline !important;
             }
 
         .astro-mini-card {
-            position: relative; /* Essential for the delete button positioning */
+            position: relative;
             padding: 12px;
             border: 1px solid #e2e8f0;
-            margin-bottom: 12px;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            border-radius: 8px;
-            background: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 8px;
+            border-radius: 7px;
+            background: #fefefe;
+            box-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
             .astro-mini-card:hover {
                 box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-                /* transform: translateY(-2px);*/
-                border-color: #7c3aed; /* Subtle purple border on hover */
+                background-color: var(--astro-accent-highlight);
             }
-
 
         .delete-card-btn {
             position: absolute;
@@ -551,10 +548,78 @@
                 color: #ef4444; /* Turns red on hover to signal deletion */
                 transform: scale(1.4);
             }
+
+        /* Container to right-align the entire sort block */
+        .astro-sort-wrapper-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 8px;
+            padding: 0 8px;
+        }
+
+        /* The pill-shaped wrapper */
+        .astro-sort-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background-color: #fefefe;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            padding: 2px 8px;
+            box-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
+            height: 28px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+            .astro-sort-box:hover {
+                background-color: #e3e6e6;
+                border-color: #888c8c;
+            }
+
+        /* The "Sort by:" label inside the box */
+        .astro-sort-label {
+            font-size: 11px;
+            color: #0f1111;
+            margin-right: 4px;
+            white-space: nowrap;
+        }
+
+        /* The actual invisible select dropdown */
+        .astro-sort-select {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0; /* Make it invisible but clickable */
+            z-index: 2; /* Sits on top to catch all clicks */
+            cursor: pointer;
+            appearance: none;
+        }
+
+        /* Add a custom small arrow if desired */
+        .astro-sort-label, .astro-sort-box::after {
+            pointer-events: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Show the CURRENTLY SELECTED text */
+        .astro-sort-current {
+            font-size: 11px;
+            font-weight: 700;
+            color: #0f1111;
+            margin-right: 4px;
+            pointer-events: none;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
+    <!-- Header -->
     <div class="astro-header">
+        <!-- Logo -->
         <div class="astro-header-title">
             <div class="astro-logo">
                 <svg viewBox="-800 0 2000 1600" preserveAspectRatio="xMidYMid meet">
@@ -565,6 +630,7 @@
             <h2>Astro Comps - Smart Analyzer</h2>
         </div>
 
+        <!-- Buttons -->
         <div style="display:flex; gap:8px;">
             <button id="clearBtn" class="astro-btn" style="display:none;" aria-label="Clear results">
                 Clear
@@ -578,12 +644,13 @@
         </div>
     </div>
 
+    <!-- Content -->
     <div class="astro-workflow">
 
         <div id="initialMessage" class="astro-status-message" style="margin-bottom: 16px;">
             Navigate to Zillow or Realtor.com and click Analyze.
         </div>
-                
+
         <!-- Filters -->
         <div class="astro-step" id="filtersStep" style="display: none;">
             <div class="astro-step-header">
@@ -699,7 +766,25 @@
             </div>
             <div class="astro-step-content">
                 <div id="statusMessageSold" class="astro-status-message">Click "Analyze" to start.</div>
+                <!-- Summary-->
                 <div id="summarySold" class="astro-summary-container" style="display: none;"></div>
+                <!-- Sort-->
+                <div class="astro-sort-wrapper-container">
+                    <div class="astro-sort-box">
+                        <span class="astro-sort-label">Sort by:</span>
+                        <span id="currentSortDisplay" class="astro-sort-current">Featured</span>
+                        <select id="unifiedSort" class="astro-sort-select">
+                            <option value="none:asc">Featured</option>
+                            <option value="price:asc">Price: Low to High</option>
+                            <option value="price:desc">Price: High to Low</option>
+                            <option value="acreageValue:asc">Acres: Small to Large</option>
+                            <option value="acreageValue:desc">Acres: Large to Small</option>
+                            <option value="status:desc">Newest Sold (Date)</option>
+                            <option value="address:asc">Address: A-Z</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Results-->
                 <div id="resultsBodySold" class="astro-card-container"></div>
             </div>
         </div>
@@ -724,12 +809,31 @@
             </div>
             <div class="astro-step-content">
                 <div id="statusMessageActive" class="astro-status-message">Click "Analyze" to start.</div>
+                <!-- Summary-->
                 <div id="summaryActive" class="astro-summary-container" style="display: none;"></div>
+                <!-- Sort-->
+                <div class="astro-sort-wrapper-container">
+                    <div class="astro-sort-box">
+                        <span class="astro-sort-label">Sort by:</span>
+                        <span id="currentSortDisplay" class="astro-sort-current">Featured</span>
+                        <select id="unifiedSort" class="astro-sort-select">
+                            <option value="none:asc">Featured</option>
+                            <option value="price:asc">Price: Low to High</option>
+                            <option value="price:desc">Price: High to Low</option>
+                            <option value="acreageValue:asc">Acres: Small to Large</option>
+                            <option value="acreageValue:desc">Acres: Large to Small</option>
+                            <option value="status:desc">Newest Sold (Date)</option>
+                            <option value="address:asc">Address: A-Z</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Results-->
                 <div id="resultsBodyActive" class="astro-card-container"></div>
             </div>
         </div>
     </div>
 
+    <!-- Footer -->
     <div class="astro-footer">
         <!-- Market Value Calculator (Initially Hidden) -->
         <div id="marketCalculator" class="astro-calculator">
@@ -780,7 +884,6 @@
             <div class="astro-footer-divider"></div>
         </div>
 
-
         <!-- Footer Links -->
         <div class="astro-footer-content">
             <div class="astro-footer-links">
@@ -802,6 +905,7 @@
         </div>
     </div>
 
+    <!-- Javascript Includes -->
     <script src="index.js"></script>
 </body>
 </html>

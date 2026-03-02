@@ -174,19 +174,22 @@ function processAndDisplayResults(properties) {
     const soldFiltered = soldTotal.filter(applyAllFilters);
     const activeFiltered = activeTotal.filter(applyAllFilters);
 
-    // 5. Update Tables, Headers, and Render Cards
-    updateSummaryContainer('summarySold', soldFiltered, soldTotal.length);
-    updateSummaryContainer('summaryActive', activeFiltered, activeTotal.length);
-    updateSummaryHeader('summaryCountSold', soldFiltered.length, soldTotal.length);
-    updateSummaryHeader('summaryCountActive', activeFiltered.length, activeTotal.length);
+    // --- NEW: 5. SORT the filtered lists before displaying ---
+    const sortedSold = sortProperties(soldFiltered);
+    const sortedActive = sortProperties(activeFiltered);
 
-    // Render each bucket
-    renderBucket('resultsBodySold', soldFiltered);
-    renderBucket('resultsBodyActive', activeFiltered);
+    // 5. Update Tables, Headers, and Render Cards (Using SORTED data now)
+    updateSummaryContainer('summarySold', sortedSold, soldTotal.length);
+    updateSummaryContainer('summaryActive', sortedActive, activeTotal.length);
+    updateSummaryHeader('summaryCountSold', sortedSold.length, soldTotal.length);
+    updateSummaryHeader('summaryCountActive', sortedActive.length, activeTotal.length);
+
+    // Render each bucket (Using SORTED data now)
+    renderBucket('resultsBodySold', sortedSold);
+    renderBucket('resultsBodyActive', sortedActive);
 
     // 6. Refresh Valuation Logic
-    // Pass the filtered lists directly to the calculation logic
-    updateSuggestedPPA(soldFiltered, activeFiltered);
+    updateSuggestedPPA(sortedSold, sortedActive); // Use sorted lists for consistency
     calculateFinalValue();
 
     // 7. Clear status messages
@@ -423,6 +426,36 @@ function deleteProperty(id) {
 }
 
 /**
+ * Sorts a list of properties based on the selected field and direction.
+ */
+function sortProperties(list) {
+    const sortValue = document.getElementById('unifiedSort').value;
+    if (sortValue === 'none:asc') return [...list];
+
+    // Split "price:desc" into field="price" and direction="desc"
+    const [field, direction] = sortValue.split(':');
+
+    return [...list].sort((a, b) => {
+        let valA = a[field];
+        let valB = b[field];
+
+        // Date Logic (Status String)
+        if (field === 'status') {
+            const dateA = new Date(valA.replace(/Sold\s*-\s*/i, ''));
+            const dateB = new Date(valB.replace(/Sold\s*-\s*/i, ''));
+            valA = isNaN(dateA) ? 0 : dateA.getTime();
+            valB = isNaN(dateB) ? 0 : dateB.getTime();
+        }
+
+        if (typeof valA === 'string') {
+            return direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        }
+
+        return direction === 'asc' ? valA - valB : valB - valA;
+    });
+}
+
+/**
  * Initialization & Listeners
  */
 document.addEventListener('DOMContentLoaded', () => {
@@ -520,5 +553,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const propertyId = e.target.getAttribute('data-id');
             deleteProperty(propertyId);
         }
+    });
+
+    // Sorting for tables
+    const sortDropdown = document.getElementById('unifiedSort');
+    const displayLabel = document.getElementById('currentSortDisplay');
+
+    sortDropdown.addEventListener('change', () => {
+        // Update the visible label to match the chosen option text
+        displayLabel.innerText = sortDropdown.options[sortDropdown.selectedIndex].text;
+    
+        // Call your existing processing logic
+        processAndDisplayResults();
     });
 });
