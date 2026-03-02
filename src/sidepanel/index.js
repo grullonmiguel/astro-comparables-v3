@@ -60,31 +60,61 @@ function handleClearClick() {
     document.getElementById('clearBtn').style.display = 'none';
     document.getElementById('exportBtn').style.display = 'none';
 
+    // Hide filters and market calculator
     const filtersStep = document.getElementById('filtersStep');
     if (filtersStep) filtersStep.style.display = 'none';
 
     const marketCalculator = document.getElementById('marketCalculator');
     if (marketCalculator) marketCalculator.style.display = 'none';
 
+    // Show initial messages
     document.getElementById('initialMessage').style.display = 'block';
     document.getElementById('statusMessageSold').style.display = 'block';
     document.getElementById('statusMessageActive').style.display = 'block';
 
+    // Reset status messages
     document.getElementById('statusMessageSold').textContent = 'Click "Analyze" to start.';
     document.getElementById('statusMessageActive').textContent = 'Click "Analyze" to start.';
 
+    // Clear tables
     document.getElementById('resultsBodySold').innerHTML = '';
     document.getElementById('resultsBodyActive').innerHTML = '';
 
+    // Hide summary containers and headers
     const summarySold = document.getElementById('summarySold');
     const summaryActive = document.getElementById('summaryActive');
     if (summarySold) summarySold.style.display = 'none';
     if (summaryActive) summaryActive.style.display = 'none';
 
+    // Hide count headers
     const summaryCountSold = document.getElementById('summaryCountSold');
     const summaryCountActive = document.getElementById('summaryCountActive');
     if (summaryCountSold) summaryCountSold.style.display = 'none';
     if (summaryCountActive) summaryCountActive.style.display = 'none';
+
+    // Reset Market Calculator
+    const calcInput = document.getElementById('calcPPAInput');
+    const acresInput = document.getElementById('calcAcresInput');
+    const outputDiv = document.getElementById('calcValueOutput');
+    
+    if (calcInput) calcInput.value = '';
+    if (acresInput) acresInput.value = '';
+    if (outputDiv) {
+        outputDiv.innerText = '$0.00';
+        acresInput.value = '';
+    }
+
+    // Reset filters
+    const filterIds = [
+        'acresMin', 'acresMax',
+        'priceMin', 'priceMax',
+        'pricePerAcreMin', 'pricePerAcreMax'
+        ];
+
+    filterIds.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+        });
 }
 
 /**
@@ -103,28 +133,46 @@ function handleExportClick() {
  * Splits data into Sold vs Active and renders them
  */
 function processAndDisplayResults(properties) {
-    // 1. Show the filter div now that we have data
+    // 1. Show UI elements now that we have data
     const filtersStep = document.getElementById('filtersStep');
     if (filtersStep) filtersStep.style.display = 'block';
 
     const marketCalculator = document.getElementById('marketCalculator');
     if (marketCalculator) marketCalculator.style.display = 'block';
 
-    // Show buttons when data is available
     document.getElementById('clearBtn').style.display = 'block';
     document.getElementById('exportBtn').style.display = 'block';
 
-    // 2. Get current filter values
-    const minAcres = parseFloat(document.getElementById('minAcreage')?.value) || 0;
-    const maxAcres = parseFloat(document.getElementById('maxAcreage')?.value) || Infinity;
+    // 2. Get ALL current filter values
+    const filters = {
+        acresMin: parseFloat(document.getElementById('acresMin')?.value) || 0,
+        acresMax: parseFloat(document.getElementById('acresMax')?.value) || Infinity,
+        priceMin: parseFloat(document.getElementById('priceMin')?.value) || 0,
+        priceMax: parseFloat(document.getElementById('priceMax')?.value) || Infinity,
+        ppaMin: parseFloat(document.getElementById('pricePerAcreMin')?.value) || 0,
+        ppaMax: parseFloat(document.getElementById('pricePerAcreMax')?.value) || Infinity
+    };
 
-    // 3. Split the MASTER list into the two status buckets
+    // 3. Split the MASTER list into original status buckets
     const soldTotal = masterPropertyList.filter(p => p.status && p.status.toLowerCase().includes('sold'));
     const activeTotal = masterPropertyList.filter(p => !p.status || !p.status.toLowerCase().includes('sold'));
 
-    // 4. Apply Filter using acreageValue
-    const soldFiltered = soldTotal.filter(p => p.acreageValue >= minAcres && p.acreageValue <= maxAcres);
-    const activeFiltered = activeTotal.filter(p => p.acreageValue >= minAcres && p.acreageValue <= maxAcres);
+    // 4. Integrated Filter Helper
+    const applyAllFilters = (p) => {
+        const ppa = p.price / p.acreageValue;
+        return (
+            p.acreageValue >= filters.acresMin &&
+            p.acreageValue <= filters.acresMax &&
+            p.price >= filters.priceMin &&
+            p.price <= filters.priceMax &&
+            ppa >= filters.ppaMin &&
+            ppa <= filters.ppaMax
+        );
+    };
+
+    // Apply filters to both buckets
+    const soldFiltered = soldTotal.filter(applyAllFilters);
+    const activeFiltered = activeTotal.filter(applyAllFilters);
 
     // 5. Update Tables, Headers, and Render Cards
     updateSummaryContainer('summarySold', soldFiltered, soldTotal.length);
@@ -136,17 +184,17 @@ function processAndDisplayResults(properties) {
     renderBucket('resultsBodySold', soldFiltered);
     renderBucket('resultsBodyActive', activeFiltered);
 
-    // Calculate suggested PPA based on current filters and update the input
-    updateSuggestedPPA();
-
-    // Recalculate the total value based on the current PPA and target acreage
+    // 6. Refresh Valuation Logic
+    // Pass the filtered lists directly to the calculation logic
+    updateSuggestedPPA(soldFiltered, activeFiltered);
     calculateFinalValue();
 
-    // Clear status messages
+    // 7. Clear status messages
     document.getElementById('initialMessage').style.display = 'none';
     document.getElementById('statusMessageSold').style.display = 'none';
     document.getElementById('statusMessageActive').style.display = 'none';
 }
+
 
 /**
  * Updates the summary div with the "X of Y results" text in purple
@@ -301,75 +349,67 @@ function calculateStats(properties) {
 /**
  * Calculates the lowest PPA from selected buckets and updates the input.
  */
-function updateSuggestedPPA() {
+function updateSuggestedPPA(soldFiltered, activeFiltered) {
     const calcInput = document.getElementById('calcPPAInput');
     const outputDiv = document.getElementById('calcValueOutput');
     if (!calcInput) return;
 
-    // 1. Determine which buckets are active based on checkboxes
     const useSold = document.getElementById('includeSoldCheckbox')?.checked;
     const useActive = document.getElementById('includeActiveCheckbox')?.checked;
 
     let possibleValues = [];
 
-    // 2. Get stats for Sold if checked
-    if (useSold) {
-        const soldStats = calculateStats(masterPropertyList.filter(p => 
-            p.status && p.status.toLowerCase().includes('sold')
-        ));
+    // Use the arguments passed in (filtered data) instead of masterPropertyList
+    if (useSold && soldFiltered.length > 0) {
+        const soldStats = calculateStats(soldFiltered);
         if (soldStats) possibleValues.push(soldStats.avgppa, soldStats.medianppa);
     }
 
-    // 3. Get stats for Active if checked
-    if (useActive) {
-        const activeStats = calculateStats(masterPropertyList.filter(p => 
-            !p.status || !p.status.toLowerCase().includes('sold')
-        ));
+    if (useActive && activeFiltered.length > 0) {
+        const activeStats = calculateStats(activeFiltered);
         if (activeStats) possibleValues.push(activeStats.avgppa, activeStats.medianppa);
     }
 
-    // 4. Find the lowest value and update input
     if (possibleValues.length > 0) {
         const lowestPPA = Math.min(...possibleValues);
         calcInput.value = Math.round(lowestPPA);
     } else {
-        // If no buckets are selected or no data exists, clear the values
         calcInput.value = "";
         if (outputDiv) outputDiv.style.display = 'none';
     }
 }
 
-    /**
-     * Multiplies the Price Per Acre by the Target Acreage to show the Final Value.
-     */
-    function calculateFinalValue() {
-        const ppaInput = document.getElementById('calcPPAInput');
-        const acresInput = document.getElementById('calcAcresInput');
-        const outputDiv = document.getElementById('calcValueOutput');
+/**
+ * Multiplies the Price Per Acre by the Target Acreage to show the Final Value.
+ */
+function calculateFinalValue() {
+    const ppaInput = document.getElementById('calcPPAInput');
+    const acresInput = document.getElementById('calcAcresInput');
+    const outputDiv = document.getElementById('calcValueOutput');
 
-        if (!ppaInput || !acresInput || !outputDiv) return;
+    if (!ppaInput || !acresInput || !outputDiv) return;
 
-        const ppa = parseFloat(ppaInput.value) || 0;
-        const acres = parseFloat(acresInput.value) || 0;
+    const ppa = parseFloat(ppaInput.value) || 0;
+    const acres = parseFloat(acresInput.value) || 0;
 
-        if (acres <= 0) {
-            //outputDiv.style.display = 'none';
-            outputDiv.innerText = '$0.00';
-            return;
-        }
-
-        const totalValue = ppa * acres;
-
-        // Show your existing div
-        outputDiv.style.display = 'block';
-
-        // OPTION A: If your div is just a container for the number
-        outputDiv.innerText = `$${Math.round(totalValue).toLocaleString()}`;
-
-        // OPTION B: If you have a specific span inside for the value
-        // const valueSpan = document.getElementById('finalValueSpan');
-        // if (valueSpan) valueSpan.innerText = `$${Math.round(totalValue).toLocaleString()}`;
+    if (acres <= 0) {
+        //outputDiv.style.display = 'none';
+        outputDiv.innerText = '$0.00';
+        return;
     }
+
+    const totalValue = ppa * acres;
+
+    // Show your existing div
+    outputDiv.style.display = 'block';
+
+    // OPTION A: If your div is just a container for the number
+    outputDiv.innerText = `$${Math.round(totalValue).toLocaleString()}`;
+
+    // OPTION B: If you have a specific span inside for the value
+    // const valueSpan = document.getElementById('finalValueSpan');
+    // if (valueSpan) valueSpan.innerText = `$${Math.round(totalValue).toLocaleString()}`;
+}
 
 /**
  * Initialization & Listeners
@@ -447,5 +487,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (acresInput) {acresInput.addEventListener('input', calculateFinalValue);}
     
     // This allows the user to manually override the suggested PPA
-    if (ppaInput) {ppaInput.addEventListener('input', calculateFinalValue);}
+    if (ppaInput) { ppaInput.addEventListener('input', calculateFinalValue); }
+
+    const filterIds = [
+        'acresMin', 'acresMax', 
+        'priceMin', 'priceMax', 
+        'pricePerAcreMin', 'pricePerAcreMax'
+    ];
+
+    filterIds.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            // 'input' event triggers immediately on every keystroke
+            input.addEventListener('input', processAndDisplayResults);
+        }
+    });
 });
