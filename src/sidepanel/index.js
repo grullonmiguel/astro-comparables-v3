@@ -395,6 +395,27 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('blur', function() {
             if (this.value && !isNaN(this.value)) this.value = parseFloat(this.value).toFixed(2);
         });
+
+        // Handle 0-to-empty behavior when decrementing
+        input.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+
+            // If value is negative, set to empty
+            if (value < 0) {
+                this.value = '';
+                return;
+            }
+
+            // If value is 0 and user is decrementing, clear the field
+            if (value === 0) {
+                // Small timeout to check if the next value would be negative
+                setTimeout(() => {
+                    if (this.value === '0' || parseFloat(this.value) === 0) {
+                        this.value = '';
+                    }
+                }, 50);
+            }
+        });
     });
 
     const minInput = document.getElementById('minAcreage');

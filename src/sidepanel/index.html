@@ -74,8 +74,11 @@
             bottom: 0;
             background: #ffffff;
             border-top: 1px solid #e5e7eb;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
             padding: 10px 14px;
             flex-shrink: 0;
+            box-shadow: 0 -18px 30px rgba(0, 0, 0, 0.25);
         }
 
         .astro-footer-content {
@@ -175,6 +178,11 @@
                 outline: none;
                 border-color: var(--astro-accent-primary);
                 box-shadow: 0 0 0 3px rgba(137, 123, 204, 0.1);
+            }
+
+            .astro-calculator-input:focus-visible {
+                outline: 3px solid var(--astro-accent-primary);
+                outline-offset: 2px;
             }
 
             .astro-calculator-input::placeholder {
@@ -560,6 +568,7 @@
                             <input type="number"
                                    id="acresMin"
                                    class="astro-input"
+                                   min="0"
                                    step="0.01"
                                    placeholder="0.00"
                                    aria-label="Minimum acres" />
@@ -569,6 +578,7 @@
                             <input type="number"
                                    id="acresMax"
                                    class="astro-input"
+                                   min="0"
                                    step="0.01"
                                    placeholder="0.00"
                                    aria-label="Maximum acres" />
@@ -583,6 +593,7 @@
                             <input type="number"
                                    id="priceMin"
                                    class="astro-input"
+                                   min="0"
                                    step="0.01"
                                    placeholder="0.00"
                                    aria-label="Minimum price" />
@@ -592,6 +603,7 @@
                             <input type="number"
                                    id="priceMax"
                                    class="astro-input"
+                                   min="0"
                                    step="0.01"
                                    placeholder="0.00"
                                    aria-label="Maximum price" />
@@ -606,6 +618,7 @@
                             <input type="number"
                                    id="pricePerAcreMin"
                                    class="astro-input"
+                                   min="0"
                                    step="0.01"
                                    placeholder="0.00"
                                    aria-label="Minimum price per acre" />
@@ -615,6 +628,7 @@
                             <input type="number"
                                    id="pricePerAcreMax"
                                    class="astro-input"
+                                   min="0"
                                    step="0.01"
                                    placeholder="0.00"
                                    aria-label="Maximum price per acre" />
@@ -686,11 +700,11 @@
                 </div>
                 <div class="astro-calculator-title">Market Value</div>
                 <div class="astro-calculator-options">
-                    <label>
+                    <label for="includeSoldCheckbox">
                         <input type="checkbox" id="includeSoldCheckbox" checked>
                         Sold
                     </label>
-                    <label>
+                    <label for="includeActiveCheckbox">
                         <input type="checkbox" id="includeActiveCheckbox" checked>
                         Active
                     </label>
@@ -704,8 +718,7 @@
                            type="number"
                            class="astro-calculator-input"
                            step="0.01"
-                           placeholder="$/Acre"
-                           aria-label="Price per acre" />
+                           placeholder="$/Acre" />
                 </div>
 
                 <div class="astro-calculator-field">
@@ -714,13 +727,12 @@
                            type="number"
                            class="astro-calculator-input"
                            step="0.01"
-                           placeholder="Acres"
-                           aria-label="Number of acres" />
+                           placeholder="Acres" />
                 </div>
 
                 <div class="astro-calculator-output">
-                    <label class="astro-calculator-label">Estimated Value</label>
-                    <div id="calcValueOutput" class="astro-calculator-value">$0.00</div>
+                    <label class="astro-calculator-label" for="calcValueOutput">Estimated Value</label>
+                    <div id="calcValueOutput" class="astro-calculator-value" role="status" aria-live="polite" aria-atomic="true">$0.00</div>
                 </div>
             </div>
             <!-- Divider -->
