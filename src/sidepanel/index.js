@@ -45,7 +45,11 @@ async function handleAnalyzeClick() {
         }
 
         if (response?.success) {
+            // Add properties to master list
             masterPropertyList = response.data;
+            // SAVE TO STORAGE IMMEDIATELY
+            saveToLocalStorage();
+            // Update UI
             processAndDisplayResults(masterPropertyList);
         }
     });
@@ -56,6 +60,9 @@ async function handleAnalyzeClick() {
  */
 function handleClearClick() {
     masterPropertyList = [];
+
+    // Wipe the storage
+    localStorage.removeItem('propertyData');
 
     document.getElementById('clearBtn').style.display = 'none';
     document.getElementById('exportBtn').style.display = 'none';
@@ -421,7 +428,10 @@ function deleteProperty(id) {
     // 1. Remove from the master list
     masterPropertyList = masterPropertyList.filter(p => p.id !== id);
 
-    // 2. Re-run the display logic (this updates counts, stats, and market value)
+    // 2. Delete records from localStorage to ensure persistence across sessions
+    saveToLocalStorage();
+
+    // 3. Re-run the display logic (this updates counts, stats, and market value)
     processAndDisplayResults();
 }
 
@@ -455,10 +465,40 @@ function sortProperties(list) {
     });
 }
 
+function saveToLocalStorage() {
+    try {
+        localStorage.setItem('propertyData', JSON.stringify(masterPropertyList));
+        console.log('[Storage] Data saved successfully.');
+    } catch (e) {
+        console.error('[Storage] Error saving to localStorage:', e);
+    }
+}
+
+function loadFromLocalStorage() {
+    const savedData = localStorage.getItem('propertyData');
+    if (savedData) {
+        try {
+            masterPropertyList = JSON.parse(savedData);
+            console.log(`[Storage] Loaded ${masterPropertyList.length} properties.`);
+            
+            // Re-run the entire display logic to fill the UI
+            if (masterPropertyList.length > 0) {
+                processAndDisplayResults();
+            }
+        } catch (e) {
+            console.error('[Storage] Error parsing saved data:', e);
+            masterPropertyList = [];
+        }
+    }
+}
+
 /**
  * Initialization & Listeners
  */
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. IMMEDIATELY LOAD SAVED DATA
+    loadFromLocalStorage();
+
     // 1. Core Actions
     document.getElementById('analyzeBtn').addEventListener('click', handleAnalyzeClick);
     document.getElementById('clearBtn').addEventListener('click', handleClearClick);
