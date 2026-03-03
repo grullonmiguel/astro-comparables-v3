@@ -39,34 +39,75 @@
             margin: 0;
             width: 100%;
             height: 100vh;
-            background: #ffffff;
+            overflow: hidden;
             color: #0f0f0f;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            background-color: var(--astro-bg-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
+
+        /* ==========================================================================
+           LAYOUT LAYERS (Header, Wrapper, footer)
+           ========================================================================== */
 
         .astro-header {
-            background: #f7f7f7;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 16px 20px;
-            flex-shrink: 0;
-            position: sticky;
             top: 0;
             z-index: 100;
+            flex-shrink: 0;
+            position: sticky;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, var(--astro-accent-tertiary), var(--astro-accent-secondary));
         }
 
+            .astro-header::before {
+                content: '';
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                opacity: 0.2;
+                position: absolute;
+                pointer-events: none;
+                background-size: 50px;
+                background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M100 0L0 100V0H100Z' fill='%23FFFFFF' opacity='0.1'/%3E%3Cpath d='M0 0L100 100V0H0Z' fill='%23000000' opacity='0.05'/%3E%3C/svg%3E");
+            }
+
             .astro-header h2 {
+                color: #ffffff;
                 font-size: 18px;
                 font-weight: 600;
                 margin-bottom: 4px;
             }
 
+        .astro-header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .astro-logo {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .astro-logo svg {
+                width: 100%;
+                height: 100%;
+                fill: #ffffff;
+            }
+
         .astro-workflow {
             flex: 1;
+            padding: 12px;
             overflow-y: auto;
-            padding: 16px;
         }
 
         .astro-footer {
@@ -96,6 +137,44 @@
             background: #e5e7eb;
             margin: 12px 0;
         }
+
+        .astro-footer-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+            .astro-footer-links a {
+                color: #6b7280;
+                text-decoration: none;
+                transition: color 0.2s;
+            }
+
+                .astro-footer-links a:hover {
+                    color: var(--astro-accent-primary);
+                }
+
+            .astro-footer-links .astro-step-icon {
+                width: 16px;
+                height: 16px;
+            }
+
+                .astro-footer-links .astro-step-icon svg {
+                    width: 100%;
+                    height: 100%;
+                    fill: #6b7280;
+                }
+
+            .astro-footer-links span {
+                color: #6b7280;
+                font-size: 11px;
+            }
+
+        /* ==========================================================================
+           MARKET VALUE
+           ========================================================================== */
 
         .astro-calculator {
             display: none;
@@ -206,39 +285,9 @@
             text-align: center;
         }
 
-        .astro-footer-links {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-            .astro-footer-links a {
-                color: #6b7280;
-                text-decoration: none;
-                transition: color 0.2s;
-            }
-
-                .astro-footer-links a:hover {
-                    color: var(--astro-accent-primary);
-                }
-
-            .astro-footer-links .astro-step-icon {
-                width: 16px;
-                height: 16px;
-            }
-
-                .astro-footer-links .astro-step-icon svg {
-                    width: 100%;
-                    height: 100%;
-                    fill: #6b7280;
-                }
-
-            .astro-footer-links span {
-                color: #6b7280;
-                font-size: 11px;
-            }
+        /* ==========================================================================
+           BUTTONS
+           ========================================================================== */
 
         .astro-btn {
             width: 100%;
@@ -280,13 +329,14 @@
                 cursor: not-allowed;
             }
 
-        /* Collapsible Step Styles */
+
         .astro-step {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
             padding: 8px;
+            border-radius: 8px;
             margin-bottom: 16px;
+            border: 0px solid #e5e7eb;
+            background-color: var(--astro-bg-secondary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.08);
         }
 
         .astro-step-header {
@@ -476,31 +526,6 @@
                 border-radius: 10px;
             }
 
-        .astro-header-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .astro-logo {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-            .astro-logo svg {
-                width: 100%;
-                height: 100%;
-            }
-
-                .astro-logo svg path {
-                    fill: var(--astro-accent-primary);
-                }
-
         .astro-address-link {
             color: #444;
             text-decoration: none;
@@ -516,12 +541,17 @@
         .astro-mini-card {
             position: relative;
             padding: 12px;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             border-radius: 7px;
-            background: #fefefe;
+            background: var(--astro-bg-secondary);
+            /* 
+                border: 1px solid #e2e8f0;
+                box-shadow: 0 2px 5px rgba(213, 217, 217, 0.5); 
+                box-shadow: 0 8px 20px rgba(0, 0.08, 0, 0.16);
+            */
+            border: 1px solid #e2e8f0;
             box-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: background 0.2s;
         }
 
             .astro-mini-card:hover {
@@ -548,6 +578,10 @@
                 color: #ef4444; /* Turns red on hover to signal deletion */
                 transform: scale(1.4);
             }
+
+        /* ==========================================================================
+           RECORD SORTING
+           ========================================================================== */
 
         /* Container to right-align the entire sort block */
         .astro-sort-wrapper-container {
@@ -630,7 +664,6 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            /* Background Fade Logic */
             opacity: 1;
             visibility: visible;
             transition: opacity 0.5s ease;
@@ -694,7 +727,6 @@
             padding: 0 4px;
         }
 
-
         .hidden {
             display: none !important;
         }
@@ -731,7 +763,7 @@
 
     <!-- Content -->
     <div class="astro-workflow">
-
+        <!-- Message -->
         <div id="initialMessage" class="astro-status-message" style="margin-bottom: 16px;">
             Navigate to Zillow or Realtor.com and click Analyze.
         </div>
